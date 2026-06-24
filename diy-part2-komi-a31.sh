@@ -506,7 +506,7 @@ function configure_custom_applications() {
     config_package_del "luci-app-mentohust"
     config_package_del "mentohust"
 
-    config_package_add "luci-app-daed"
+    # config_package_add "luci-app-daed"
     configure_daed_kernel_options
 
     echo "Enabling Passwall2..."
