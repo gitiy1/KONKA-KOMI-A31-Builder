@@ -73,3 +73,4 @@ make -j"${JOBS}" V="${V:-s}" || make -j1 V="${V:-s}"
 
 echo "Build output:"
 find bin/targets -type f \( -name '*komi*a31*' -o -name '*konka*' -o -name '*.itb' -o -name '*.manifest' -o -name 'sha256sums' \) -print
+"${ROOT_DIR}/scripts/validate-komi-a31-images.sh" "${OPENWRT_DIR}/bin/targets/mediatek/filogic"

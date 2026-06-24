@@ -149,6 +149,7 @@ jobs:
           make -j"$(($(nproc) + 1))" V=s || make -j1 V=s
           build_end="$(date +%s)"
           echo "Build completed in $(((build_end - build_start) / 60))m $(((build_end - build_start) % 60))s"
+          "$GITHUB_WORKSPACE/scripts/validate-komi-a31-images.sh" "$PWD/bin/targets/mediatek/filogic"
           echo "COMPILE_DATE=$(date +'%Y%m%d%H%M')" >> "$GITHUB_ENV"
 
       - name: Organize firmware
@@ -164,7 +165,6 @@ jobs:
         with:
           name: ${{ env.COMPILE_DATE }}-${{ env.OPENWRT_NAME }}-${{ env.UPLOAD_TAG_NAME }}
           path: |
-            /workdir/openwrt/bin/targets/*/*/*.itb
             /workdir/openwrt/bin/targets/*/*/*.bin
             /workdir/openwrt/bin/targets/*/*/*.manifest
             /workdir/openwrt/bin/targets/*/*/sha256sums

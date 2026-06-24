@@ -1,6 +1,12 @@
 --- a/target/linux/mediatek/dts/mt7981b-konka-komi-a31.dts
 +++ b/target/linux/mediatek/dts/mt7981b-konka-komi-a31.dts
-@@ -31,7 +31,7 @@
+@@ -20,13 +20,11 @@
+ 	};
+ 
+ 	chosen: chosen {
+-		bootargs = "root=/dev/fit0 rootwait";
+-		rootdisk = <&ubi_rootdisk>;
+ 		stdout-path = "serial0:115200n8";
  	};
  
  	memory@40000000 {
@@ -9,12 +15,60 @@
  	};
  
  	gpio-keys {
-@@ -202,7 +202,7 @@
+@@ -202,13 +200,7 @@
  			partition@580000 {
  				compatible = "linux,ubi";
  				label = "ubi";
 -				reg = <0x580000 0x7a80000>;
+-
+-				volumes {
+-					ubi_rootdisk: ubi-volume-fit {
+-						volname = "fit";
+-					};
+-				};
 +				reg = <0x580000 0x7000000>;
- 
- 				volumes {
- 					ubi_rootdisk: ubi-volume-fit {
+ 			};
+ 		};
+ 	};
+--- a/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
++++ b/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
+@@ -78,4 +78,5 @@ platform_do_upgrade() {
+ 	h3c,magic-nx30-pro|\
+ 	jcg,q30-pro|\
+-    qihoo,360t7)
++	konka,komi-a31|\
++    qihoo,360t7)
+ 		CI_UBIPART="ubi"
+@@ -96,6 +97,5 @@ platform_do_upgrade() {
+ 	gatonetworks,gdsp|\
+ 	imou,lc-hx3001|\
+-	konka,komi-a31|\
+ 	livinet,zr-3020-ubootmod|\
+ 	mediatek,7981r128|\
+ 	mediatek,mt7981-rfb|\
+--- a/target/linux/mediatek/image/filogic.mk
++++ b/target/linux/mediatek/image/filogic.mk
+@@ -1356,15 +1356,18 @@ define Device/konka_komi-a31
+   DEVICE_DTC_FLAGS := --pad 4096
+   DEVICE_DTS_LOADADDR := 0x43f00000
+   KERNEL_LOADADDR := 0x44000000
++  UBINIZE_OPTS := -E 5
++  BLOCKSIZE := 128k
++  PAGESIZE := 2048
++  IMAGE_SIZE := 114688k
+   KERNEL_IN_UBI := 1
+-  UBOOTENV_IN_UBI := 1
+-  IMAGES := sysupgrade.itb
++  IMAGES := sysupgrade.bin factory.bin
+   KERNEL_INITRAMFS_SUFFIX := -recovery.itb
+-  KERNEL := kernel-bin | gzip
++  KERNEL := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
+   KERNEL_INITRAMFS := kernel-bin | lzma | \
+         fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
+-  IMAGE/sysupgrade.itb := append-kernel | \
+-        fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-static-with-rootfs | append-metadata
++  IMAGE/factory.bin := append-ubi | check-size $$$$(IMAGE_SIZE)
++  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+   ARTIFACTS := preloader.bin bl31-uboot.fip \
+ 	emmc-gpt.bin emmc-preloader.bin emmc-bl31-uboot.fip \
+ 	nor-preloader.bin nor-bl31-uboot.fip
