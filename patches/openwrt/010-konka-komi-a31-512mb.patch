@@ -1,0 +1,20 @@
+--- a/target/linux/mediatek/dts/mt7981b-konka-komi-a31.dts
++++ b/target/linux/mediatek/dts/mt7981b-konka-komi-a31.dts
+@@ -31,7 +31,7 @@
+ 	};
+ 
+ 	memory@40000000 {
+-		reg = <0 0x40000000 0 0x10000000>;
++		reg = <0 0x40000000 0 0x20000000>;
+ 	};
+ 
+ 	gpio-keys {
+@@ -202,7 +202,7 @@
+ 			partition@580000 {
+ 				compatible = "linux,ubi";
+ 				label = "ubi";
+-				reg = <0x580000 0x7a80000>;
++				reg = <0x580000 0x7000000>;
+ 
+ 				volumes {
+ 					ubi_rootdisk: ubi-volume-fit {

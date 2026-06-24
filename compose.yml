@@ -1,0 +1,19 @@
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: komi-a31-immortalwrt-builder:24.10-6.6
+    working_dir: /workspace
+    userns_mode: keep-id
+    volumes:
+      - .:/workspace
+      - ./LocalWorkdir:/workdir
+      - ./references:/references:ro
+    environment:
+      WORKDIR: /workdir
+      OPENWRT_LOCAL_SOURCE: /references/immortalwrt-mt798x-6.6
+      CCACHE_DIR: /workdir/.ccache
+      OPTIMIZATION_LEVEL: full
+      CUSTOM_LAN_IP: 192.168.6.1
+    command: ["bash", "scripts/build-openwrt.sh"]

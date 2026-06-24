@@ -1,0 +1,171 @@
+name: ImmortalWrt 24.10 6.6 KOMI A31
+
+on:
+  workflow_dispatch:
+    inputs:
+      OPTIMIZATION_LEVEL:
+        description: 'Optimization level'
+        required: false
+        default: full
+        type: choice
+        options:
+          - basic
+          - full
+          - advanced
+          - custom
+      ENABLE_LTO:
+        description: '[custom] Enable LTO'
+        required: false
+        default: true
+        type: boolean
+      ENABLE_MOLD:
+        description: '[custom] Enable mold'
+        required: false
+        default: true
+        type: boolean
+      ENABLE_BPF:
+        description: '[custom] Enable BPF/daed kernel options'
+        required: false
+        default: true
+        type: boolean
+      KERNEL_CLANG_LTO:
+        description: '[custom] Enable kernel clang ThinLTO'
+        required: false
+        default: true
+        type: boolean
+      USE_GCC14:
+        description: '[custom] Prefer GCC 14'
+        required: false
+        default: true
+        type: boolean
+      CUSTOM_LAN_IP:
+        description: 'Default LAN IP'
+        required: false
+        default: '192.168.6.1'
+        type: string
+
+env:
+  TZ: Asia/Shanghai
+  REPO_URL: https://github.com/padavanonly/immortalwrt-mt798x-6.6
+  REPO_BRANCH: openwrt-24.10-6.6
+  OPENWRT_NAME: immortalwrt-24.10-6.6
+  UPLOAD_TAG_NAME: konka_komi-a31
+  OPTIMIZATION_LEVEL: ${{ inputs.OPTIMIZATION_LEVEL || 'full' }}
+  ENABLE_LTO: ${{ inputs.ENABLE_LTO || 'true' }}
+  ENABLE_MOLD: ${{ inputs.ENABLE_MOLD || 'true' }}
+  ENABLE_BPF: ${{ inputs.ENABLE_BPF || 'true' }}
+  KERNEL_CLANG_LTO: ${{ inputs.KERNEL_CLANG_LTO || 'true' }}
+  USE_GCC14: ${{ inputs.USE_GCC14 || 'true' }}
+  CUSTOM_LAN_IP: ${{ inputs.CUSTOM_LAN_IP || '192.168.6.1' }}
+  CCACHE_DIR: /workdir/.ccache
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Initialization environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo -E apt-get -qq update
+          sudo apt-get install -y golang-go mold libisl-dev gcc-14 g++-14 ccache rename
+          sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+          sudo timedatectl set-timezone "$TZ"
+          sudo mkdir -p /workdir
+          sudo chown "$USER:$GROUPS" /workdir
+
+      - name: Clone source code
+        working-directory: /workdir
+        run: |
+          git clone -b "$REPO_BRANCH" --single-branch --depth 1 "$REPO_URL" openwrt
+          ln -sf /workdir/openwrt "$GITHUB_WORKSPACE/openwrt"
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: /workdir/.ccache
+          key: ${{ runner.os }}-openwrt-ccache-${{ env.REPO_BRANCH }}-${{ env.UPLOAD_TAG_NAME }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-openwrt-ccache-${{ env.REPO_BRANCH }}-${{ env.UPLOAD_TAG_NAME }}-
+            ${{ runner.os }}-openwrt-ccache-${{ env.REPO_BRANCH }}-
+
+      - name: Apply feeds and patches
+        run: |
+          cp -f feeds.conf.default openwrt/feeds.conf.default
+          scripts/apply-openwrt-patches.sh openwrt
+          cd openwrt
+          "$GITHUB_WORKSPACE/diy-part1.sh"
+
+      - name: Update and install feeds
+        run: |
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Configure KOMI A31
+        run: |
+          cp -f openwrt/defconfig/mt7981-ax3000.config openwrt/.config
+          cd openwrt
+          "$GITHUB_WORKSPACE/diy-part2-komi-a31.sh"
+          make defconfig
+
+      - name: Download packages
+        run: |
+          cd openwrt
+          jobs="$(($(nproc) + 1))"
+          for attempt in 1 2; do
+            if make download -j"${jobs}"; then
+              exit 0
+            fi
+            echo "Parallel download failed (attempt ${attempt}); removing tiny partial files and retrying."
+            find dl -size -1024c -print -delete || true
+          done
+          make download -j1 V=s
+          find dl -size -1024c -print -delete
+
+      - name: Compile firmware
+        id: compile
+        run: |
+          cd openwrt
+          build_start="$(date +%s)"
+          make -j"$(($(nproc) + 1))" V=s || make -j1 V=s
+          build_end="$(date +%s)"
+          echo "Build completed in $(((build_end - build_start) / 60))m $(((build_end - build_start) % 60))s"
+          echo "COMPILE_DATE=$(date +'%Y%m%d%H%M')" >> "$GITHUB_ENV"
+
+      - name: Organize firmware
+        run: |
+          cd openwrt/bin/targets/*/*
+          rm -rf packages
+          rename "s/^/${COMPILE_DATE}-${OPENWRT_NAME}-/" *
+          find "$PWD" -maxdepth 1 -type f -print
+          echo "FIRMWARE=$PWD" >> "$GITHUB_ENV"
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COMPILE_DATE }}-${{ env.OPENWRT_NAME }}-${{ env.UPLOAD_TAG_NAME }}
+          path: |
+            /workdir/openwrt/bin/targets/*/*/*.itb
+            /workdir/openwrt/bin/targets/*/*/*.bin
+            /workdir/openwrt/bin/targets/*/*/*.manifest
+            /workdir/openwrt/bin/targets/*/*/sha256sums
+            /workdir/openwrt/bin/targets/*/**/*buildinfo
