@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Free disk space
         uses: jlumbroso/free-disk-space@main
@@ -99,7 +99,7 @@ jobs:
           ln -sf /workdir/openwrt "$GITHUB_WORKSPACE/openwrt"
 
       - name: Cache ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /workdir/.ccache
           key: ${{ runner.os }}-openwrt-ccache-${{ env.REPO_BRANCH }}-${{ env.UPLOAD_TAG_NAME }}-${{ github.sha }}
@@ -161,7 +161,7 @@ jobs:
           echo "FIRMWARE=$PWD" >> "$GITHUB_ENV"
 
       - name: Upload firmware
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.COMPILE_DATE }}-${{ env.OPENWRT_NAME }}-${{ env.UPLOAD_TAG_NAME }}
           path: |

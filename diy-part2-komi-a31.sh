@@ -96,8 +96,6 @@ function fix_target_platform_config() {
     config_del "TARGET_mediatek_mt7981"
     config_add "TARGET_mediatek_filogic"
 
-    echo "Device list after platform check:"
-    config_device_list
     echo "Target platform configuration completed"
 }
 
@@ -117,6 +115,8 @@ function keep_only_komi_a31() {
     config_del "TARGET_PER_DEVICE_ROOTFS"
 
     echo "Configured for KONKA KOMI A31 only"
+    echo "Device list after device pruning:"
+    config_device_list
 }
 
 # ============================================
