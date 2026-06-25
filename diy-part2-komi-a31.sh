@@ -453,7 +453,7 @@ function configure_system_packages() {
     config_package_add "miniupnpd"
     config_package_add "qrencode"
     config_package_add "fdisk"
-    config_package_add "iperf"
+    config_package_add "iperf3"
 
     local usb_packages=(
         "usbutils"
