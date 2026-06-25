@@ -515,6 +515,9 @@ function configure_custom_applications() {
     config_package_add "luci-app-passwall2_Nftables_Transparent_Proxy"
     config_package_add "tcping"
 
+    echo "Enabling Natmap..."
+    config_package_add "luci-app-netmap"
+    
     echo "Custom applications configured"
 }
 
