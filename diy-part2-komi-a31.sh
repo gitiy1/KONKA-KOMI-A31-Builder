@@ -378,7 +378,7 @@ function setup_third_party_packages() {
         cp -a package/custom/OpenWrt-Packages/golang feeds/packages/lang/golang
     elif [ ! -d "feeds/packages/lang/golang" ]; then
         echo "Custom golang not found, cloning sbwml/packages_lang_golang 27.x..."
-        git clone --depth 1 -b 27.x https://github.com/sbwml/packages_lang_golang.git feeds/packages/lang/golang
+        git clone --depth 1 https://github.com/sbwml/packages_lang_golang.git feeds/packages/lang/golang
     fi
 
     echo "Setting up specific applications..."
