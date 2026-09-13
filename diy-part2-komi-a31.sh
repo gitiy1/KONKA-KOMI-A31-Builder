@@ -512,6 +512,8 @@ function configure_custom_applications() {
     echo "Enabling Passwall2..."
     config_package_add "luci-app-passwall2"
     #config_package_add "luci-app-passwall2_INCLUDE_Hysteria"
+    config_package_add "luci-app-passwall2_Basic_Core_Xray"
+    config_package_add "luci-app-passwall2_Basic_Core_SingBox"
     config_package_add "luci-app-passwall2_Nftables_Transparent_Proxy"
     config_package_add "tcping"
 
