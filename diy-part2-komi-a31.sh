@@ -401,6 +401,7 @@ function configure_unwanted_packages() {
         "luci-app-ssr-plus_INCLUDE_ShadowsocksR_Rust_Server"
         "luci-app-passwall2_INCLUDE_ShadowsocksR_Libev_Client"
         "luci-app-passwall2_INCLUDE_Shadowsocks_Libev_Client"
+        "luci-app-passwall2_INCLUDE_Shadowsocks_Rust_Client"
         "luci-app-passwall2_INCLUDE_Haproxy"
         "luci-app-passwall2_INCLUDE_Simple_Obfs"
     )
@@ -511,9 +512,10 @@ function configure_custom_applications() {
 
     echo "Enabling Passwall2..."
     config_package_add "luci-app-passwall2"
-    #config_package_add "luci-app-passwall2_INCLUDE_Hysteria"
-    config_package_add "luci-app-passwall2_Basic_Core_Xray"
-    config_package_add "luci-app-passwall2_Basic_Core_SingBox"
+    config_package_add "luci-app-passwall2_Basic_Core_All"
+    # config_package_add "luci-app-passwall2_INCLUDE_Hysteria"
+    # config_package_add "luci-app-passwall2_Basic_Core_Xray"
+    # config_package_add "luci-app-passwall2_Basic_Core_SingBox"
     config_package_add "luci-app-passwall2_Nftables_Transparent_Proxy"
     config_package_add "tcping"
 
