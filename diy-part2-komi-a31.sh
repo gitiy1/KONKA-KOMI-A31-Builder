@@ -377,8 +377,8 @@ function setup_third_party_packages() {
         rm -rf feeds/packages/lang/golang
         cp -a package/custom/OpenWrt-Packages/golang feeds/packages/lang/golang
     elif [ ! -d "feeds/packages/lang/golang" ]; then
-        echo "Custom golang not found, cloning sbwml/packages_lang_golang 25.x..."
-        git clone --depth 1 -b 25.x https://github.com/sbwml/packages_lang_golang.git feeds/packages/lang/golang
+        echo "Custom golang not found, cloning sbwml/packages_lang_golang 27.x..."
+        git clone --depth 1 -b 27.x https://github.com/sbwml/packages_lang_golang.git feeds/packages/lang/golang
     fi
 
     echo "Setting up specific applications..."
@@ -511,7 +511,7 @@ function configure_custom_applications() {
 
     echo "Enabling Passwall2..."
     config_package_add "luci-app-passwall2"
-    config_package_add "luci-app-passwall2_INCLUDE_Hysteria"
+    #config_package_add "luci-app-passwall2_INCLUDE_Hysteria"
     config_package_add "luci-app-passwall2_Nftables_Transparent_Proxy"
     config_package_add "tcping"
 
